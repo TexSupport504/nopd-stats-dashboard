@@ -2,10 +2,20 @@
     "terminal.integrated.cwd": "${workspaceFolder}",
     "terminal.integrated.defaultProfile.windows": "PowerShell",
     "terminal.integrated.shell.windows": "powershell.exe",
-    "terminal.integrated.shellArgs.windows": ["-ExecutionPolicy", "Bypass", "-NoLogo", "-Command", "Set-Location '${workspaceFolder}'"],
+    "terminal.integrated.shellArgs.windows": [
+        "-ExecutionPolicy", "Bypass", 
+        "-NoLogo", 
+        "-Command", 
+        "Set-Location '${workspaceFolder}'; Write-Host 'Terminal started in: ' -NoNewline; Get-Location"
+    ],
+    "terminal.integrated.automationShell.windows": "powershell.exe",
     "files.defaultLanguage": "javascript",
     "emmet.includeLanguages": {
         "javascript": "javascriptreact"
     },
-    "terminal.integrated.automationShell.windows": "powershell.exe"
+    // Repository-specific settings for NOPD Dashboard
+    "terminal.integrated.env.windows": {
+        "REPO_ROOT": "${workspaceFolder}",
+        "PROJECT_NAME": "nopd-stats-dashboard"
+    }
 }

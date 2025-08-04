@@ -81,12 +81,17 @@ const DataAnalyzer = ({ onDataLoaded }) => {
         const row = mainSheet[i]
         totalRecords++
         
-        // Extract relevant data (adjust indices based on your Excel structure)
-        const crimeType = row[1] || '' // Assuming crime type is in column B
-        const address = row[2] || '' // Assuming address is in column C
-        const latitude = parseFloat(row[3]) || null // Assuming lat in column D
-        const longitude = parseFloat(row[4]) || null // Assuming lon in column E
-        const dateTime = row[5] || '' // Assuming datetime in column F
+        // Extract relevant data based on your actual Excel structure
+        const crimeClass = row[0] || '' // Column A: Class
+        const reportNumber = row[1] || '' // Column B: Report Number
+        const crimeType = row[2] || '' // Column C: Crime
+        const dateTime = row[3] || '' // Column D: First Date Time
+        const address = row[4] || '' // Column E: Address Of Crime
+        const attempted = row[5] || '' // Column F: Attempted
+        const latitude = parseFloat(row[6]) || null // Column G: Latitude
+        const longitude = parseFloat(row[7]) || null // Column H: Longitude
+        const offenseDescription = row[8] || '' // Column I: Offense Description
+        const accuracy = row[9] || '' // Column J: Accuracy
         
         // 1. Apply Julia St. filter
         if (isNorthOfJuliaSt(address, latitude)) {
@@ -94,8 +99,10 @@ const DataAnalyzer = ({ onDataLoaded }) => {
           continue // Skip this record
         }
         
-        // 2. Classify violent vs non-violent
-        const crimeClassified = classification[crimeType.toUpperCase()] || 'Unknown'
+        // 2. Classify violent vs non-violent using improved matching
+        const crimeClassified = classification[crimeType.toUpperCase().trim()] || 
+                               classification[crimeClass.toUpperCase().trim()] || 
+                               'Unknown'
         if (crimeClassified === 'Violent') {
           violentCrimes++
         } else if (crimeClassified === 'Non-Violent') {
@@ -175,7 +182,7 @@ const DataAnalyzer = ({ onDataLoaded }) => {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
         <div className="flex items-center justify-center space-x-3 mb-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-police-600"></div>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
           <span className="text-gray-600">
             {processingStatus.loading || 'Loading NOPD data...'}
           </span>
@@ -210,7 +217,7 @@ const DataAnalyzer = ({ onDataLoaded }) => {
         </p>
         <button 
           onClick={loadAllData}
-          className="mt-4 px-4 py-2 bg-police-600 text-white rounded-lg hover:bg-police-700"
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           Retry Loading
         </button>
@@ -229,7 +236,7 @@ const DataAnalyzer = ({ onDataLoaded }) => {
           </p>
           <button 
             onClick={loadAllData}
-            className="px-6 py-3 bg-police-600 text-white rounded-lg hover:bg-police-700 flex items-center space-x-2 mx-auto"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 mx-auto"
           >
             <Upload className="h-4 w-4" />
             <span>Load NOPD Data</span>
@@ -349,7 +356,7 @@ const DataAnalyzer = ({ onDataLoaded }) => {
       {/* Data Structure Analysis */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center space-x-3 mb-6">
-          <Info className="h-6 w-6 text-police-600" />
+          <Info className="h-6 w-6 text-blue-600" />
           <h3 className="text-lg font-semibold text-gray-900">Data Structure Analysis</h3>
         </div>
 
