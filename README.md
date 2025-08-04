@@ -2,32 +2,113 @@
 
 A modern React-based dashboard for displaying New Orleans Police Department statistics and analytics.
 
+## Overview
+
+The NOPD Statistics Dashboard provides a comprehensive, data-driven view of crime statistics for the New Orleans Police Department. Built with modern web technologies, it offers intuitive visualization tools and robust data analysis capabilities.
+
+![NOPD Dashboard](https://github.com/TexSupport504/nopd-stats-dashboard/raw/master/public/dashboard-preview.png)
+
+## Features
+
+- 📊 **Smart Data Analysis** - Automatically detects and parses Excel data formats
+- 🕒 **Time-Based Filtering** - Filter data by last 7 days, 30 days, 90 days, 6 months, 1 year, or all time
+- 📈 **Interactive Charts** - Visualize crime trends, patterns, and distributions
+- 📱 **Fully Responsive** - Optimized for desktop, tablet, and mobile devices
+- 🌙 **Dark/Light Themes** - User-selectable interface theme
+- 🔍 **District & Location Analytics** - Break down crime data by police district and location
+- 📝 **Type Classification** - Automatic categorization of violent vs. non-violent crimes
+- 🛠️ **Robust Error Handling** - Intelligent recovery from data issues with helpful error messages
+
 ## Project Structure
 
 ```
 nopd-stats-dashboard/
-├── public/                 # Static assets
+├── public/                    # Static assets and data files
+│   ├── NOPD Data.xlsx         # Crime statistics data
+│   └── [other assets]
 ├── src/
-│   ├── components/        # React components
-│   │   ├── Dashboard.jsx  # Main dashboard view
-│   │   ├── Layout.jsx     # App layout with header/footer
-│   │   ├── StatCard.jsx   # Individual statistic cards
-│   │   └── ChartContainer.jsx # Chart wrapper component
+│   ├── components/            # React components
+│   │   ├── LandingPageNew.jsx # Main dashboard view with analytics
+│   │   ├── ModernLayout.jsx   # App layout with navigation
+│   │   ├── MetricCard.jsx     # Enhanced metric display cards
+│   │   └── ModernChart.jsx    # Chart visualization component
+│   ├── contexts/
+│   │   └── ThemeContext.jsx   # Dark/light theme management
 │   ├── utils/
-│   │   └── dataUtils.js   # Data processing utilities
-│   ├── App.jsx           # Main app component
-│   ├── main.jsx          # App entry point
-│   └── index.css         # Global styles
-├── package.json          # Project dependencies
-├── vite.config.js       # Vite configuration
-└── tailwind.config.js   # Tailwind CSS configuration
+│   │   └── dataUtils.js       # Data processing utilities
+│   ├── App.jsx                # Main application router
+│   └── main.jsx               # App entry point
+├── package.json               # Project dependencies
+├── vite.config.js             # Vite build configuration
+└── tailwind.config.js         # UI design system configuration
 ```
 
-## Features
+## Recent Improvements
 
-- 📊 **Interactive Charts** - Built with Recharts for data visualization
-- 📱 **Responsive Design** - Works on desktop, tablet, and mobile
-- 🎨 **Modern UI** - Clean design with Tailwind CSS
+### Added
+- Enhanced time frame filtering with intelligent date handling
+- Support for multiple Excel date formats
+- Detailed record count visibility for each time frame
+- Smart data reference point detection for historical data
+- Fallback mechanisms to prevent empty views
+
+### Fixed
+- Time frame dropdown selections now show accurate record counts
+- Empty data handling with helpful user guidance
+- Date parsing for various format types
+- Console debugging for data validation
+- Error recovery options with "View All Historical Data" button
+
+### Technical
+- Used newest date in dataset as reference point for filtering
+- Added year-by-year data distribution analysis
+- Added detailed logging for time frame record counts
+- Improved date parsing to handle Excel serial dates
+- Enhanced user interface feedback for filter changes
+
+## Usage
+
+### Getting Started
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Start development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Build for production:
+   ```bash
+   npm run build
+   npm run preview
+   ```
+
+## Data Requirements
+
+The dashboard expects an Excel file with crime data containing at least:
+
+1. A date column (detected automatically)
+2. Crime type/category column
+3. Optional district and location columns
+
+The system will automatically detect appropriate columns and handle common date formats, including Excel serial dates, MM/DD/YYYY, YYYY-MM-DD, and other standard formats.
+
+## Configuration
+
+### Time Frame Options
+
+Time frames are configured in `LandingPageNew.jsx` and can be customized:
+
+```jsx
+const timeFrameOptions = [
+  { value: '7d', label: '7 Days', days: 7 },
+  { value: '30d', label: '30 Days', days: 30 },
+  // Add more options as needed
+]
+```
 - 🔧 **Easy Data Integration** - Utilities for processing your data files
 - ⚡ **Fast Development** - Vite for quick builds and hot reload
 

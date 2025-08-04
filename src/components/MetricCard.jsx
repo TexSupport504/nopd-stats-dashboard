@@ -7,7 +7,7 @@ const MetricCard = ({
   value, 
   change, 
   changeType = 'number', // 'number', 'percentage'
-  trend, // 'up', 'down', 'neutral'
+  trend, // 'up', 'down', 'neutral' - can also be derived from change value
   icon: Icon,
   description,
   size = 'normal', // 'small', 'normal', 'large'
@@ -15,12 +15,17 @@ const MetricCard = ({
   sparklineData = null, // Array of values for mini sparkline
   actionLabel = "Show more →",
   threshold = null, // For gauge-like progress indicators
-  unit = '' // Unit label (%, $, etc.)
+  unit = '', // Unit label (%, $, etc.)
+  isDarkMode // Adding this for backwards compatibility
 }) => {
-  const { isDarkMode } = useTheme()
+  const { isDarkMode: themeIsDarkMode } = useTheme()
+  const darkMode = isDarkMode !== undefined ? isDarkMode : themeIsDarkMode
+
+  // Auto-detect trend from change value if not provided
+  const autoTrend = trend || (change > 0 ? 'up' : change < 0 ? 'down' : 'neutral')
 
   const getTrendIcon = () => {
-    switch (trend) {
+    switch (autoTrend) {
       case 'up':
         return <TrendingUp className="h-4 w-4" />
       case 'down':
@@ -31,23 +36,23 @@ const MetricCard = ({
   }
 
   const getTrendColor = () => {
-    switch (trend) {
+    switch (autoTrend) {
       case 'up':
         return 'text-green-500'
       case 'down':
         return 'text-red-500'
       default:
-        return isDarkMode ? 'text-gray-400' : 'text-gray-500'
+        return darkMode ? 'text-gray-400' : 'text-gray-500'
     }
   }
 
   const getCardStyle = () => {
     if (variant === 'featured') {
-      return isDarkMode 
+      return darkMode 
         ? 'bg-gradient-to-br from-gray-900 to-black border-gray-700 shadow-2xl' 
         : 'bg-gradient-to-br from-gray-50 to-white border-gray-200 shadow-xl'
     }
-    return isDarkMode 
+    return darkMode 
       ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' 
       : 'bg-white border-gray-200 hover:bg-gray-50'
   }
@@ -95,7 +100,7 @@ const MetricCard = ({
         <polyline
           points={points}
           fill="none"
-          stroke={getTrendColor().includes('green') ? '#10B981' : getTrendColor().includes('red') ? '#EF4444' : isDarkMode ? '#9CA3AF' : '#6B7280'}
+          stroke={getTrendColor().includes('green') ? '#10B981' : getTrendColor().includes('red') ? '#EF4444' : darkMode ? '#9CA3AF' : '#6B7280'}
           strokeWidth="1.5"
           className="opacity-70"
         />
@@ -113,7 +118,7 @@ const MetricCard = ({
     
     return (
       <div className="mt-3">
-        <div className={`w-full bg-gray-200 rounded-full h-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+        <div className={`w-full bg-gray-200 rounded-full h-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
           <div 
             className={`h-2 rounded-full transition-all duration-300 ${
               isDanger ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : 'bg-green-500'
@@ -121,7 +126,7 @@ const MetricCard = ({
             style={{ width: `${Math.min(percentage, 100)}%` }}
           ></div>
         </div>
-        <div className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+        <div className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           {value}{unit} of {threshold.max}{unit} target
         </div>
       </div>
@@ -136,8 +141,8 @@ const MetricCard = ({
           {Icon && (
             <div className={`p-2 rounded-lg transition-all duration-200 ${
               variant === 'featured'
-                ? isDarkMode ? 'bg-white text-black group-hover:scale-110' : 'bg-black text-white group-hover:scale-110'
-                : isDarkMode ? 'bg-gray-700 text-gray-300 group-hover:bg-gray-600' : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200'
+                ? darkMode ? 'bg-white text-black group-hover:scale-110' : 'bg-black text-white group-hover:scale-110'
+                : darkMode ? 'bg-gray-700 text-gray-300 group-hover:bg-gray-600' : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200'
             }`}>
               <Icon className="h-5 w-5" />
             </div>
@@ -145,15 +150,15 @@ const MetricCard = ({
           <div className="flex-1">
             <div className="flex items-center space-x-2">
               <h3 className={`text-sm font-medium tracking-wide uppercase ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                darkMode ? 'text-gray-400' : 'text-gray-600'
               }`}>
                 {title}
               </h3>
               {description && (
                 <div className="group/tooltip relative">
-                  <Info className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'} hover:text-current cursor-help`} />
+                  <Info className={`h-4 w-4 ${darkMode ? 'text-gray-500' : 'text-gray-400'} hover:text-current cursor-help`} />
                   <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-sm rounded-lg shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 ${
-                    isDarkMode ? 'bg-gray-900 text-white border border-gray-700' : 'bg-white text-gray-900 border border-gray-200'
+                    darkMode ? 'bg-gray-900 text-white border border-gray-700' : 'bg-white text-gray-900 border border-gray-200'
                   }`}>
                     {description}
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
@@ -163,7 +168,7 @@ const MetricCard = ({
             </div>
             {description && !threshold && (
               <p className={`text-sm mt-1 ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                darkMode ? 'text-gray-400' : 'text-gray-500'
               }`}>
                 {description}
               </p>
@@ -173,7 +178,7 @@ const MetricCard = ({
         
         {/* Actions Menu */}
         <button className={`p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity ${
-          isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
+          darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
         }`}>
           <MoreHorizontal className="h-4 w-4" />
         </button>
@@ -184,14 +189,14 @@ const MetricCard = ({
         <div className="flex items-baseline space-x-2">
           <div className={`font-display font-bold tracking-tight ${getValueSize()} ${
             variant === 'featured'
-              ? isDarkMode ? 'text-white' : 'text-gray-900'
-              : isDarkMode ? 'text-gray-100' : 'text-gray-900'
+              ? darkMode ? 'text-white' : 'text-gray-900'
+              : darkMode ? 'text-gray-100' : 'text-gray-900'
           }`}>
             {value}
           </div>
           {unit && (
             <span className={`text-lg font-medium ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              darkMode ? 'text-gray-400' : 'text-gray-500'
             }`}>
               {unit}
             </span>
@@ -213,7 +218,7 @@ const MetricCard = ({
                 {changeType === 'percentage' ? `${Math.abs(change)}%` : Math.abs(change)}
               </span>
             </div>
-            <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               vs last period
             </span>
           </div>
@@ -221,7 +226,7 @@ const MetricCard = ({
         
         {actionLabel && (
           <button className={`text-sm font-medium transition-colors ${
-            isDarkMode 
+            darkMode 
               ? 'text-gray-400 hover:text-white' 
               : 'text-gray-600 hover:text-gray-900'
           }`}>

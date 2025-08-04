@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOPD Data Loading Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; margin: 2rem; line-height: 1.5; }
+        pre { background: #f5f5f5; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+        button { padding: 0.5rem 1rem; margin-right: 0.5rem; margin-bottom: 1rem; cursor: pointer; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .file-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem; }
+        .file-option { 
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+        .file-option:hover { background-color: #f0f0f0; }
+        .file-option.active { background-color: #e0e0ff; border-color: blue; }
+    </style>
+</head>
+<body>
+    <h1>NOPD Data Loading Test</h1>
+    
+    <div>
+        <h2>Step 1: Choose File to Test</h2>
+        <div class="file-container">
+            <div class="file-option" data-file="/nopd-data.xlsx">nopd-data.xlsx</div>
+            <div class="file-option" data-file="/NOPD Data.xlsx">NOPD Data.xlsx</div>
+        </div>
+    </div>
+
+    <div>
+        <h2>Step 2: Test Loading</h2>
+        <button id="testFetch">Test Fetch Response</button>
+        <button id="testLoad">Test Full Data Load</button>
+    </div>
+
+    <div>
+        <h2>Results:</h2>
+        <div id="status"></div>
+        <pre id="results"></pre>
+    </div>
+    
+    <div>
+        <h2>Data Preview:</h2>
+        <div id="dataPreview"></div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+        const dataPreview = document.getElementById('dataPreview');
+        
+        // File selection
+        document.querySelectorAll('.file-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.file-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                selectedFile = option.getAttribute('data-file');
+                log('Selected file: ' + selectedFile, 'info');
+            });
+        });
+
+        // Test fetch only
+        document.getElementById('testFetch').addEventListener('click', async () => {
+            if (!selectedFile) {
+                log('Please select a file first!', 'error');
+                return;
+            }
+            
+            try {
+                status.innerHTML = '<p>Fetching file...</p>';
+                const response = await fetch(selectedFile);
+                
+                log('Fetch response:', 'info');
+                log('Status: ' + response.status + ' ' + response.statusText);
+                log('Headers: ' + JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2));
+                
+                if (response.ok) {
+                    status.innerHTML = '<p class="success">✅ Fetch successful!</p>';
+                } else {
+                    status.innerHTML = '<p class="error">❌ Fetch failed: ' + response.status + ' ' + response.statusText + '</p>';
+                }
+            } catch (error) {
+                log('Error fetching file: ' + error.message, 'error');
+                status.innerHTML = '<p class="error">❌ Error: ' + error.message + '</p>';
+            }
+        });
+
+        // Test full load
+        document.getElementById('testLoad').addEventListener('click', async () => {
+            if (!selectedFile) {
+                log('Please select a file first!', 'error');
+                return;
+            }
+            
+            results.innerHTML = '';
+            dataPreview.innerHTML = '';
+            status.innerHTML = '<p>Loading data...</p>';
+            
+            try {
+                // Fetch the file
+                log('1. Fetching file: ' + selectedFile, 'info');
+                const response = await fetch(selectedFile);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch file: ' + response.status + ' ' + response.statusText);
+                }
+                
+                log('2. File fetched successfully, getting arrayBuffer...', 'info');
+                const arrayBuffer = await response.arrayBuffer();
+                log('3. ArrayBuffer size: ' + arrayBuffer.byteLength + ' bytes', 'info');
+                
+                // Parse with XLSX
+                log('4. Parsing with XLSX...', 'info');
+                const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+                
+                // Check if sheets exist
+                log('5. Workbook loaded. Sheet names: ' + workbook.SheetNames.join(', '), 'info');
+                
+                if (workbook.SheetNames.length === 0) {
+                    throw new Error('No sheets found in Excel file');
+                }
+                
+                // Get first sheet
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                log('6. Getting first sheet: ' + workbook.SheetNames[0], 'info');
+                
+                // Convert to JSON
+                log('7. Converting sheet to JSON...', 'info');
+                const data = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                // Display results
+                log('8. Data loaded successfully!', 'success');
+                log('- Total rows: ' + data.length);
+                log('- Headers: ' + JSON.stringify(data[0]));
+                log('- Sample row: ' + JSON.stringify(data[1]));
+                
+                // Create a table to display data
+                createDataTable(data);
+                
+                status.innerHTML = '<p class="success">✅ Data loaded successfully!</p>';
+            } catch (error) {
+                log('Error loading data: ' + error.message, 'error');
+                status.innerHTML = '<p class="error">❌ Error: ' + error.message + '</p>';
+            }
+        });
+        
+        // Helper functions
+        function log(message, type) {
+            const timestamp = new Date().toLocaleTimeString();
+            let formattedMessage = `[${timestamp}] ${message}`;
+            
+            if (typeof message === 'object') {
+                formattedMessage = `[${timestamp}] ${JSON.stringify(message, null, 2)}`;
+            }
+            
+            const className = type || '';
+            results.innerHTML += `<div class="${className}">${formattedMessage}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        function createDataTable(data) {
+            if (!data || !data.length) {
+                dataPreview.innerHTML = '<p class="error">No data available</p>';
+                return;
+            }
+            
+            const headers = data[0];
+            const rows = data.slice(1, 11); // First 10 rows
+            
+            let table = '<table>';
+            
+            // Headers
+            table += '<tr>';
+            headers.forEach(header => {
+                table += `<th>${header || 'Unnamed'}</th>`;
+            });
+            table += '</tr>';
+            
+            // Rows
+            rows.forEach(row => {
+                table += '<tr>';
+                headers.forEach((_, i) => {
+                    table += `<td>${row[i] !== undefined ? row[i] : ''}</td>`;
+                });
+                table += '</tr>';
+            });
+            
+            table += '</table>';
+            dataPreview.innerHTML = table;
+        }
+    </script>
+</body>
+</html>
