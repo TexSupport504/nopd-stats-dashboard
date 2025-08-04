@@ -1,8 +1,11 @@
 {
     "terminal.integrated.cwd": "${workspaceFolder}",
     "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.shell.windows": "powershell.exe",
+    "terminal.integrated.shellArgs.windows": ["-ExecutionPolicy", "Bypass", "-NoLogo", "-Command", "Set-Location '${workspaceFolder}'"],
     "files.defaultLanguage": "javascript",
     "emmet.includeLanguages": {
         "javascript": "javascriptreact"
-    }
+    },
+    "terminal.integrated.automationShell.windows": "powershell.exe"
 }

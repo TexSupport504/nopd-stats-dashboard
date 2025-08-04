@@ -1,0 +1,19 @@
+{
+    "folders": [
+        {
+            "name": "NOPD Stats Dashboard",
+            "path": "."
+        }
+    ],
+    "settings": {
+        "terminal.integrated.cwd": "${workspaceFolder}",
+        "terminal.integrated.defaultProfile.windows": "PowerShell"
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-vscode.vscode-typescript-next",
+            "bradlc.vscode-tailwindcss",
+            "esbenp.prettier-vscode"
+        ]
+    }
+}
