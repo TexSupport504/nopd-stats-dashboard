@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Analysis Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>NOPD Data Date Analysis</h1>
+    <button onclick="analyzeDates()">Analyze Date Columns</button>
+    <div id="result"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        async function analyzeDates() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Analyzing...';
+            
+            try {
+                const response = await fetch('/nopd-data.xlsx');
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const data = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                console.log('📊 Full data loaded:', data.length, 'rows');
+                
+                const headers = data[0];
+                console.log('📋 Headers:', headers);
+                
+                // Find date columns
+                const dateColumns = [];
+                headers.forEach((header, index) => {
+                    if (header && typeof header === 'string' && 
+                        /date|time|occurred|incident/i.test(header)) {
+                        dateColumns.push({ index, name: header });
+                    }
+                });
+                
+                console.log('📅 Date columns found:', dateColumns);
+                
+                let output = `<div class="result">
+                    <h2>Analysis Results</h2>
+                    <p><strong>Total rows:</strong> ${data.length}</p>
+                    <p><strong>Headers:</strong> ${headers.join(', ')}</p>
+                    <p><strong>Date columns found:</strong> ${dateColumns.length}</p>
+                `;
+                
+                if (dateColumns.length > 0) {
+                    const dateCol = dateColumns[0];
+                    output += `<h3>Analyzing column: ${dateCol.name} (index ${dateCol.index})</h3>`;
+                    
+                    // Sample first 10 date values
+                    const sampleDates = data.slice(1, 11).map((row, i) => {
+                        const dateValue = row[dateCol.index];
+                        let parsedDate = null;
+                        let parseMethod = 'failed';
+                        
+                        if (dateValue) {
+                            const dateStr = dateValue.toString();
+                            
+                            // Try parsing
+                            if (/^\d{5}$/.test(dateStr)) {
+                                // Excel serial
+                                const excelEpoch = new Date(1900, 0, 1);
+                                parsedDate = new Date(excelEpoch.getTime() + (parseInt(dateStr) - 2) * 24 * 60 * 60 * 1000);
+                                parseMethod = 'Excel serial';
+                            } else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+                                // MM/DD/YYYY
+                                const parts = dateStr.split('/');
+                                parsedDate = new Date(parts[2], parts[0] - 1, parts[1]);
+                                parseMethod = 'MM/DD/YYYY';
+                            } else if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+                                // ISO
+                                parsedDate = new Date(dateStr);
+                                parseMethod = 'ISO format';
+                            } else {
+                                // General
+                                parsedDate = new Date(dateStr);
+                                parseMethod = 'General parsing';
+                            }
+                        }
+                        
+                        return {
+                            row: i + 1,
+                            raw: dateValue,
+                            parsed: parsedDate,
+                            valid: parsedDate && !isNaN(parsedDate.getTime()),
+                            method: parseMethod,
+                            dateString: parsedDate && !isNaN(parsedDate.getTime()) ? parsedDate.toDateString() : 'Invalid'
+                        };
+                    });
+                    
+                    output += '<h4>Sample Date Values:</h4><table border="1" style="width:100%">';
+                    output += '<tr><th>Row</th><th>Raw Value</th><th>Parse Method</th><th>Parsed Date</th><th>Valid</th></tr>';
+                    
+                    sampleDates.forEach(sample => {
+                        output += `<tr>
+                            <td>${sample.row}</td>
+                            <td>"${sample.raw}"</td>
+                            <td>${sample.method}</td>
+                            <td>${sample.dateString}</td>
+                            <td>${sample.valid ? '✅' : '❌'}</td>
+                        </tr>`;
+                    });
+                    
+                    output += '</table>';
+                    
+                    // Check date range
+                    const validDates = sampleDates.filter(s => s.valid).map(s => s.parsed);
+                    if (validDates.length > 0) {
+                        const minDate = new Date(Math.min(...validDates));
+                        const maxDate = new Date(Math.max(...validDates));
+                        const today = new Date();
+                        const daysDiff = Math.floor((today - maxDate) / (1000 * 60 * 60 * 24));
+                        
+                        output += `<h4>Date Range Analysis:</h4>
+                            <p><strong>Earliest date:</strong> ${minDate.toDateString()}</p>
+                            <p><strong>Latest date:</strong> ${maxDate.toDateString()}</p>
+                            <p><strong>Today:</strong> ${today.toDateString()}</p>
+                            <p><strong>Days since latest data:</strong> ${daysDiff} days</p>
+                            <p><strong>30-day filter cutoff:</strong> ${new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toDateString()}</p>
+                        `;
+                    }
+                }
+                
+                output += '</div>';
+                result.innerHTML = output;
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                result.innerHTML = `<div class="result"><h2>Error</h2><p>${error.message}</p></div>`;
+            }
+        }
+    </script>
+</body>
+</html>

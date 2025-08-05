@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Loading Test</title>
+</head>
+<body>
+    <h1>NOPD Data Loading Test</h1>
+    <button onclick="testDataLoad()">Test Data Loading</button>
+    <div id="result"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        async function testDataLoad() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing...';
+            
+            try {
+                console.log('🔄 Testing data load...');
+                const response = await fetch('/nopd-data.xlsx');
+                console.log('📊 Response:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const arrayBuffer = await response.arrayBuffer();
+                console.log('📏 File size:', arrayBuffer.byteLength, 'bytes');
+                
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                console.log('📑 Sheets:', workbook.SheetNames);
+                
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const data = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                console.log('✅ SUCCESS:', data.length, 'rows loaded');
+                
+                result.innerHTML = `
+                    <h2>✅ SUCCESS!</h2>
+                    <p>File size: ${arrayBuffer.byteLength} bytes</p>
+                    <p>Rows loaded: ${data.length}</p>
+                    <p>Columns: ${data[0]?.length}</p>
+                    <p>Headers: ${JSON.stringify(data[0])}</p>
+                `;
+                
+            } catch (error) {
+                console.error('💥 ERROR:', error);
+                result.innerHTML = `
+                    <h2>❌ ERROR</h2>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

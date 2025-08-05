@@ -1,0 +1,32 @@
+{
+    "folders": [
+        {
+            "name": "NOPD Stats Dashboard",
+            "path": "."
+        }
+    ],
+    "settings": {
+        "terminal.integrated.cwd": "${workspaceFolder}",
+        "terminal.integrated.defaultProfile.windows": "PowerShell",
+        "terminal.integrated.shell.windows": "powershell.exe",
+        "terminal.integrated.shellArgs.windows": [
+            "-ExecutionPolicy", "Bypass", 
+            "-NoLogo", 
+            "-Command", 
+            "Set-Location '${workspaceFolder}'; Write-Host 'NOPD Dashboard - Working Directory: ' -NoNewline -ForegroundColor Green; Get-Location"
+        ],
+        // Auto-set working directory for all new terminals
+        "terminal.integrated.env.windows": {
+            "REPO_ROOT": "${workspaceFolder}",
+            "PROJECT_NAME": "nopd-stats-dashboard",
+            "PROJECT_PATH": "e:\\OneDrive\\Documents\\GitHub\\nopd-stats-dashboard"
+        }
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-vscode.vscode-typescript-next",
+            "bradlc.vscode-tailwindcss",
+            "esbenp.prettier-vscode"
+        ]
+    }
+}
